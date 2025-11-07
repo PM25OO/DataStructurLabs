@@ -76,35 +76,140 @@ Status ListTraverse(SqList L) {
     return OK;
 }
 
-void Union(SqList *La, SqList Lb) {
+SqList Union(SqList La, SqList Lb) {
+    SqList Lc;
+    InitList(&Lc);
+    ElemType e;
+    for (int i = 1; i <= La.length; i++) {
+        GetElem(La, i, &e);
+        ListInsert(&Lc, Lc.length + 1, e);
+    }
+    for (int i = 1; i <= Lb.length; i++) {
+        GetElem(Lb, i, &e);
+        if (!LocateList(La, e)) {
+            ListInsert(&Lc, Lc.length + 1, e);
+        }
+    }
+    return Lc;
+}
+
+SqList Intersection(SqList La, SqList Lb) {
+    SqList Lc;
+    InitList(&Lc);
     ElemType e;
     for (int i = 1; i <= Lb.length; i++) {
         GetElem(Lb, i, &e);
-        if (!LocateList(*La, e)) {
-            ListInsert(La, La->length + 1, e);
+        if (LocateList(La, e)) {
+            ListInsert(&Lc, Lc.length + 1, e);
         }
+    }
+    return Lc;
+}
+
+SqList Difference(SqList La, SqList Lb) {
+    SqList Lc;
+    InitList(&Lc);
+    ElemType e;
+    for (int i = 1; i <= La.length; i++) {
+        GetElem(La, i, &e);
+        if (!LocateList(Lb, e)) {
+            ListInsert(&Lc, Lc.length + 1, e);
+        }
+    }
+    return Lc;
+}
+
+void MergeList(SqList La, SqList Lb, SqList *Lc) {
+    InitList(Lc);
+    int i = 1, j = 1;
+    ElemType a, b;
+    while (i <= La.length && j <= Lb.length) {
+        GetElem(La, i, &a);
+        GetElem(Lb, j, &b);
+        if (a <= b) {
+            ListInsert(Lc, Lc->length + 1, a);
+            i++;
+        } else {
+            ListInsert(Lc, Lc->length + 1, b);
+            j++;
+        }
+    }
+    while (i <= La.length) {
+        GetElem(La, i, &a);
+        ListInsert(Lc, Lc->length + 1, a);
+        i++;
+    }
+    while (j <= Lb.length) {
+        GetElem(Lb, j, &b);
+        ListInsert(Lc, Lc->length + 1, b);
+        j++;
     }
 }
 
-void Intersection(SqList *La, SqList Lb) {
-    ElemType e;
-    for (int i = 1; i <= La->length; ) {
-        GetElem(*La, i, &e);
-        if (!LocateList(Lb, e)) {
-            ListDelete(La, i, &e);
+void Purge(SqList *L) {
+    int i = 1;
+    ElemType e1, e2;
+    while (i < L->length) {
+        GetElem(*L, i, &e1);
+        GetElem(*L, i + 1, &e2);
+        if (e1 == e2) {
+            ListDelete(L, i + 1, &e2);
         } else {
             i++;
         }
     }
 }
 
-void Difference(SqList *La, SqList Lb) {
-    ElemType e;
-    for (int i = 1; i <= Lb.length; i++) {
-        GetElem(Lb, i, &e);
-        int pos;
-        while ((pos = LocateList(*La, e))) {
-            ListDelete(La, pos, &e);
-        }
-    }
+int main() {
+    
+    // 数据准备，LA=（2,8,27,39,66,77,89）, LB=（6,18,27,59,65,77,89,120,140）
+    SqList LA, LB;
+    InitList(&LA);
+    ListInsert(&LA, 1, 2);
+    ListInsert(&LA, 2, 8);
+    ListInsert(&LA, 3, 27);
+    ListInsert(&LA, 4, 39);
+    ListInsert(&LA, 5, 66);
+    ListInsert(&LA, 6, 77);
+    ListInsert(&LA, 7, 89);
+    InitList(&LB);
+    ListInsert(&LB, 1, 6);
+    ListInsert(&LB, 2, 18);
+    ListInsert(&LB, 3, 27);
+    ListInsert(&LB, 4, 59);
+    ListInsert(&LB, 5, 65);
+    ListInsert(&LB, 6, 77);
+    ListInsert(&LB, 7, 89);
+    ListInsert(&LB, 8, 120);
+    ListInsert(&LB, 9, 140);
+    printf("LA: ");
+    ListTraverse(LA);
+    printf("LB: ");
+    ListTraverse(LB);
+
+    // 测试并集、交集、差集函数
+    printf("Union of LA and LB: ");
+    SqList Lc = Union(LA, LB);
+    ListTraverse(Lc);
+    printf("Intersection of LA and LB: ");
+    Lc = Intersection(LA, LB);
+    ListTraverse(Lc);
+    printf("Difference of LA and LB: ");
+    Lc = Difference(LA, LB);
+    ListTraverse(Lc);
+
+    // 测试合并函数
+    printf("Merge of LA and LB: ");
+    SqList Lc1;
+    MergeList(LA, LB, &Lc1);
+    ListTraverse(Lc1);
+
+    // 测试去重函数
+    printf("Purge duplicates in merged list: ");
+    Purge(&Lc1);
+    ListTraverse(Lc1);
+
+    printf("\nPress any key to exit...\n");
+    getchar();
+    return 0;
 }
