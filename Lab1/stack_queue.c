@@ -25,7 +25,8 @@ typedef struct
 
 } SqStack; // SqStack为用户定义的顺序栈类型
 
-#define MAXQSIZE 10 // 队列的最大长度
+#define MAXQSIZE 10
+#define QUEUE_MAXQSIZE (MAXQSIZE + 1) // 队列的最大长度
 
 typedef int QElemType; // 声明SElemType的类型
 
@@ -95,7 +96,7 @@ Status Pop(SqStack *S, SElemType *e)
 
 Status InitQueue(SqQueue *Q)
 {
-    Q->base = (QElemType *)malloc(MAXQSIZE * sizeof(QElemType));
+    Q->base = (QElemType *)malloc(QUEUE_MAXQSIZE * sizeof(QElemType));
     if (!Q->base)
         exit(OVERFLOW);
     Q->front = 0;
@@ -112,15 +113,15 @@ Status ClearQueue(SqQueue *Q)
 
 int QueueLength(SqQueue Q)
 {
-    return (Q.rear - Q.front + MAXQSIZE) % MAXQSIZE;
+    return (Q.rear - Q.front + QUEUE_MAXQSIZE) % QUEUE_MAXQSIZE;
 }
 
 Status EnQueue(SqQueue *Q, QElemType e)
 {
-    if ((Q->rear + 1) % MAXQSIZE == Q->front)
+    if ((Q->rear + 1) % QUEUE_MAXQSIZE == Q->front)
         return ERROR;
     Q->base[Q->rear] = e;
-    Q->rear = (Q->rear + 1) % MAXQSIZE;
+    Q->rear = (Q->rear + 1) % QUEUE_MAXQSIZE;
     return OK;
 }
 
@@ -129,7 +130,7 @@ Status DeQueue(SqQueue *Q, QElemType *e)
     if (Q->front == Q->rear)
         return ERROR;
     *e = Q->base[Q->front];
-    Q->front = (Q->front + 1) % MAXQSIZE;
+    Q->front = (Q->front + 1) % QUEUE_MAXQSIZE;
     return OK;
 }
 
@@ -143,7 +144,7 @@ Status QueueEmpty(SqQueue Q)
 
 Status QueueFull(SqQueue Q)
 {
-    if ((Q.rear + 1) % MAXQSIZE == Q.front)
+    if ((Q.rear + 1) % QUEUE_MAXQSIZE == Q.front)
         return TRUE;
     else
         return FALSE;
@@ -151,6 +152,11 @@ Status QueueFull(SqQueue Q)
 
 Status Conversion(int m, int n)
 {
+    if (m == 0)
+    {
+        printf("0\n");
+        return OK;
+    }
     SqStack S;
     InitStack(&S);
     int remainder;
@@ -172,21 +178,24 @@ Status Conversion(int m, int n)
     return OK;
 }
 
-Status QueueReverse(SqQueue Q)
+Status QueueReverse(SqQueue *Q)
 {
     SqStack S;
     InitStack(&S);
     QElemType e;
-    while (!QueueEmpty(Q))
+
+    while (!QueueEmpty(*Q))
     {
-        DeQueue(&Q, &e);
+        DeQueue(Q, &e);
         Push(&S, e);
     }
+
     while (StackLength(S) > 0)
     {
         Pop(&S, &e);
-        EnQueue(&Q, e);
+        EnQueue(Q, e);
     }
+
     return OK;
 }
 
@@ -246,12 +255,20 @@ int main()
     printf("Queue front: %d, rear: %d\n", Q.front, Q.rear);
 
     // 4>调用函数QueueReverse(Q)，将队列元素逆序重排，然后将队列元素出队并输出
-    QueueReverse(Q);
-    printf("Queue after reverse:\n");
+    printf("Queue before reverse:\n");
+    SqQueue tempQ = Q; // 复制队列以显示内容
+    while (!QueueEmpty(tempQ))
+    {
+        QElemType e;
+        DeQueue(&tempQ, &e);
+        printf("%d ", e);
+    }
+    QueueReverse(&Q);
+    printf("\nQueue after reverse:\n");
     while (!QueueEmpty(Q))
     {
         QElemType e;
         DeQueue(&Q, &e);
-        printf("Dequeued: %d\n", e);
+        printf("%d ", e);
     }
 }
