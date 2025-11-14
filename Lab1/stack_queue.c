@@ -215,7 +215,7 @@ int main()
     // 1>连续入队9个整数后，显示队列Q的front和rear的值
     SqQueue Q;
     InitQueue(&Q);
-    printf("Enqueuing 9 integers into the queue:\n");
+    printf("连续入队9个整数:\n");
     for (int i = 1; i <= 9; i++)
     {
         QElemType e;
@@ -225,6 +225,7 @@ int main()
     printf("Queue front: %d, rear: %d\n", Q.front, Q.rear);
 
     // 2>若再入队1个整数，显示此时队列的状态信息
+    printf("再入队1个整数: ");
     QElemType e;
     scanf("%d", &e);
     if (EnQueue(&Q, e) == ERROR)
@@ -238,6 +239,7 @@ int main()
     }
 
     // 3>连续出队5个整数，再入队2个整数，显示此时的队列Q的长度与front和rear的值
+    printf("连续出队5个整数:\n");
     for (int i = 0; i < 5; i++)
     {
         QElemType e;
@@ -245,6 +247,7 @@ int main()
         printf("Dequeued: %d\n", e);
     }
     printf("Queue front: %d, rear: %d\n", Q.front, Q.rear);
+    printf("再入队2个整数:\n");
     for (int i = 11; i <= 12; i++)
     {
         QElemType e;
