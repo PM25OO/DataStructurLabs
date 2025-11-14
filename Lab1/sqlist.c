@@ -208,8 +208,4 @@ int main() {
     printf("Purge duplicates in merged list: ");
     Purge(&Lc1);
     ListTraverse(Lc1);
-
-    printf("\nPress any key to exit...\n");
-    getchar();
-    return 0;
 }
