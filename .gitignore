@@ -1,4 +1,7 @@
 *.doc
 *.docx
 *.exe
+*.rar
+*.zip
+*.7z
 build/
