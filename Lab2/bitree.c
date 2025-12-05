@@ -87,17 +87,41 @@ int High(BiTree T) {
 }
 
 BiTree CreateBST(BiTree *T, const char *chars) {
-    if (*chars == '\0') {
-        *T = NULL;
-        return;
+    if (T == NULL) return NULL;
+    *T = NULL;
+    if (chars == NULL) return NULL;
+
+    for (int i = 0; chars[i] != '\0'; i++) {
+        BiTree newNode = (BiTree)malloc(sizeof(BiTNode));
+        if (!newNode) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+        newNode->data = chars[i];
+        newNode->lchild = newNode->rchild = NULL;
+
+        if (*T == NULL) {
+            *T = newNode;
+            continue;
+        }
+
+        BiTree current = *T;
+        BiTree parent = NULL;
+        while (current) {
+            parent = current;
+            if (chars[i] < current->data) {
+                current = current->lchild;
+            } else {
+                current = current->rchild;
+            }
+        }
+        if (chars[i] < parent->data) {
+            parent->lchild = newNode;
+        } else {
+            parent->rchild = newNode;
+        }
     }
-    *T = (BiTNode *) malloc(sizeof(BiTNode));
-    if (!*T) {
-        exit(-1);
-    }
-    (*T)->data = *chars;
-    CreateBST(&((*T)->lchild), chars + 1);
-    CreateBST(&((*T)->rchild), chars + 2);
+    return *T;
 }
 
 
@@ -117,7 +141,16 @@ int main() {
     printf("度为1的结点个数: %d\n", TNodes(T, 1));
     printf("度为2的结点个数: %d\n", TNodes(T, 2));
 
-    BiTree T1 = CreateBST(T1, "DBFCAEG");
+    BiTree T1 = NULL;
+    BiTree T2 = NULL;
+    CreateBST(&T1, "DBFCAEG");
+    CreateBST(&T2, "ABCDEFG");
+    printf("T1中序遍历结果: \n");
+    InOrderTraverse(T1);
+    printf("\nT2中序遍历结果: \n");
+    InOrderTraverse(T2);
+    printf("T1的高度: %d\n", High(T1));
+    printf("T2的高度: %d\n", High(T2));
     
     return 0;
 }
