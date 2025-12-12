@@ -143,6 +143,7 @@ int main() {
 
     BiTree T1 = NULL;
     BiTree T2 = NULL;
+    printf("\n创建二叉排序树并中序遍历, T1: DBFCAEG, T2: ABCDEFG\n");
     CreateBST(&T1, "DBFCAEG");
     CreateBST(&T2, "ABCDEFG");
     printf("T1中序遍历结果: \n");
@@ -154,10 +155,3 @@ int main() {
     
     return 0;
 }
-
-// 按前序遍历创建几个二叉树输入示例，至少有5个节点，并画出树形图
-// 示例1: A B D # # E # # C # #
-// 示例2: F G # H # # I J # # K # ##
-// 示例3: M N O # # P # # Q R # # S # ##
-// 示例4: X Y # Z # # W # # ##
-// 示例5: 1 2 4 # # 5 # # 3 # ##
