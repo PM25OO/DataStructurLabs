@@ -157,6 +157,9 @@ int main() {
     printf("\n正在进行线索化...\n");
     InOrderThreading(&Thrt, T);
 
+    printf("\n线索化结果(递归):\n| LTag | 左指针所指元素 | 本结点的值 | 右指针所指元素 | RTag |\n");
+    InOrderTraverse_Thr(Thrt);
+
     printf("\n线索化结果:\n| LTag | 左指针所指元素 | 本结点的值 | 右指针所指元素 | RTag |\n");
     InOrderTraverse_Thr(Thrt);
     
