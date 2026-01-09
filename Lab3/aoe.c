@@ -123,59 +123,113 @@ static int locate_vex(const ALGraph *G, VertexType v) {
 	return -1;
 }
 
-void Dijkstra(const ALGraph *G, VertexType src, VertexType dst) {
-	int s = locate_vex(G, src);
-	int t = locate_vex(G, dst);
-	if (s == -1 || t == -1) {
-		printf("vertex not found\n");
-		return;
-	}
-	int dist[MAX_VERTEX_NUM];
-	int prev[MAX_VERTEX_NUM];
-	int visited[MAX_VERTEX_NUM] = {0};
+static int compute_indegree(const ALGraph *G, int indegree[]) {
 	for (int i = 0; i < G->vexnum; ++i) {
-		dist[i] = INF;
-		prev[i] = -1;
+		indegree[i] = 0;
 	}
-	dist[s] = 0;
-
-	for (int iter = 0; iter < G->vexnum; ++iter) {
-		int u = -1;
-		int mind = INF;
-		for (int i = 0; i < G->vexnum; ++i) {
-			if (!visited[i] && dist[i] < mind) {
-				mind = dist[i];
-				u = i;
-			}
-		}
-		if (u == -1) break;
-		visited[u] = 1;
-		for (ArcNode *p = G->vertices[u].firstarc; p; p = p->nextarc) {
-			int v = p->adjvex;
-			if (!visited[v] && dist[u] + p->weight < dist[v]) {
-				dist[v] = dist[u] + p->weight;
-				prev[v] = u;
-			}
+	for (int i = 0; i < G->vexnum; ++i) {
+		for (ArcNode *p = G->vertices[i].firstarc; p; p = p->nextarc) {
+			indegree[p->adjvex]++;
 		}
 	}
-
-	if (dist[t] == INF) {
-		printf("no path from %c to %c\n", src, dst);
-		return;
-	}
-
-	int path[MAX_VERTEX_NUM];
-	int cnt = 0;
-	for (int v = t; v != -1; v = prev[v]) {
-		path[cnt++] = v;
-	}
-	printf("shortest path %c->%c (len=%d): ", src, dst, dist[t]);
-	for (int i = cnt - 1; i >= 0; --i) {
-		printf("%c", G->vertices[path[i]].data);
-		if (i) printf(" -> ");
-	}
-	printf("\n");
+	return 0;
 }
+
+int CriticalPath(ALGraph *G) {
+	if (G->kind != DG && G->kind != DN) {
+		printf("Critical path only defined for directed AOE nets.\n");
+		return 0;
+	}
+
+	int indegree[MAX_VERTEX_NUM];
+	int ve[MAX_VERTEX_NUM];
+	int vl[MAX_VERTEX_NUM];
+	int topo[MAX_VERTEX_NUM];
+	int stack[MAX_VERTEX_NUM];
+	int top = -1;
+	int count = 0;
+
+	compute_indegree(G, indegree);
+	for (int i = 0; i < G->vexnum; ++i) {
+		ve[i] = 0;
+		if (indegree[i] == 0) {
+			stack[++top] = i;
+		}
+	}
+
+	while (top >= 0) {
+		int v = stack[top--];
+		topo[count++] = v;
+		for (ArcNode *p = G->vertices[v].firstarc; p; p = p->nextarc) {
+			int k = p->adjvex;
+			if (ve[v] + p->weight > ve[k]) {
+				ve[k] = ve[v] + p->weight;
+			}
+			if (--indegree[k] == 0) {
+				stack[++top] = k;
+			}
+		}
+	}
+
+	if (count < G->vexnum) {
+		printf("Graph contains a cycle, no critical path.\n");
+		return 0;
+	}
+
+	printf("Topological order: ");
+	for (int i = 0; i < count; ++i) {
+		printf("%c%s", G->vertices[topo[i]].data, (i + 1 == count) ? "\n" : " ");
+	}
+
+	printf("Earliest event times (ve):\n");
+	for (int i = 0; i < G->vexnum; ++i) {
+		printf("%c:%d%s", G->vertices[i].data, ve[i], (i + 1 == G->vexnum) ? "\n" : "  ");
+	}
+
+	int max_ve = ve[topo[count - 1]];
+	for (int i = 0; i < G->vexnum; ++i) {
+		vl[i] = max_ve;
+	}
+
+	for (int idx = count - 1; idx >= 0; --idx) {
+		int v = topo[idx];
+		for (ArcNode *p = G->vertices[v].firstarc; p; p = p->nextarc) {
+			int k = p->adjvex;
+			if (vl[k] - p->weight < vl[v]) {
+				vl[v] = vl[k] - p->weight;
+			}
+		}
+	}
+
+	printf("Latest event times (vl):\n");
+	for (int i = 0; i < G->vexnum; ++i) {
+		printf("%c:%d%s", G->vertices[i].data, vl[i], (i + 1 == G->vexnum) ? "\n" : "  ");
+	}
+
+	printf("Activities detail (e=earliest start, l=latest start, slack=l-e):\n");
+
+	printf("Critical activities:\n");
+	for (int v = 0; v < G->vexnum; ++v) {
+		for (ArcNode *p = G->vertices[v].firstarc; p; p = p->nextarc) {
+			int k = p->adjvex;
+			int e = ve[v];
+			int l = vl[k] - p->weight;
+			printf("%c -> %c  e=%d  l=%d  slack=%d%s\n",
+			    G->vertices[v].data,
+			    G->vertices[k].data,
+			    e,
+			    l,
+			    l - e,
+			    (e == l) ? "  *critical" : "");
+			if (e == l) {
+				printf("  (duration=%d)\n", p->weight);
+			}
+		}
+	}
+
+	return 1;
+}
+
 
 
 int main(void) {
@@ -201,5 +255,6 @@ int main(void) {
 	CreateALGraph(DN, &G, 10, 16, vexs, arcs);
 	printf("Graph (figure network):\n");
 	OutALGraph(G);
-	Dijkstra(&G, 'A', 'J');
+	CriticalPath(&G);
+
 }
